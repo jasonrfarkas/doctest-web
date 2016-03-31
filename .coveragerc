@@ -1,0 +1,3 @@
+[run]
+source = doctest/
+omit = '*tests*,*commands*,*migrations*,*admin*,*wsgi*'

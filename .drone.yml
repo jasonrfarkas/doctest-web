@@ -1,0 +1,43 @@
+
+build:
+  image: python:2.7
+  environment:
+    -DATABASE_URL=postgres://postgres@localhost/doctest
+  # commands:
+  #   - go get
+  #   - go build
+  #   - go test
+script:
+  - pip install pip-accel
+  - pip-accel install ansible
+  - pip-accel install -r requirements/development.txt
+  - psql -c "CREATE DATABASE doctest;" -U postgres
+    
+  - flake8
+  - py.test --cov -v --tb=native
+  - ansible-playbook -i provisioner/hosts provisioner/site.yml --syntax-check
+
+# compose:
+#   database:
+#     image: postgres
+#     environment:
+#       - POSTGRES_USER=postgres
+#       - POSTGRES_PASSWORD=mysecretpassword
+
+
+# deploy:
+#   heroku:
+#     app: doctest-dev
+#     # token: $$HEROKU_TOKEN # this referances .drone.sec for the encrypted token
+#     when: 
+#       branch: master
+#  heroku:
+#     app: doctest-qa
+#     # token: $$HEROKU_TOKEN # this referances .drone.sec for the encrypted token
+#     when: 
+#       branch: qa
+#  heroku:
+#     app: doctest-prod
+#     # token: $$HEROKU_TOKEN # this referances .drone.sec for the encrypted token
+#     when: 
+#       branch: prod

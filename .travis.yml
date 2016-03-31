@@ -1,0 +1,56 @@
+language: python
+sudo: false
+python:
+- 2.7
+
+addons:
+  postgresql: "9.4"
+
+cache:
+  directories:
+    - $HOME/.cache/pip
+    - $HOME/.pip-accel
+
+before_cache:
+  - rm -f $HOME/.cache/pip/log/debug.log
+
+before_script:
+- export DATABASE_URL=postgres://postgres@localhost/doctest
+- psql -c "CREATE DATABASE doctest;" -U postgres
+
+
+cache:
+  directories:
+  - $HOME/.cache/pip
+  - $HOME/.pip-accel
+
+before_cache:
+- rm -f $HOME/.cache/pip/log/debug.log
+
+install:
+  - pip install pip-accel
+  - pip-accel install ansible
+  - pip-accel install -r requirements/development.txt
+
+script:
+- flake8
+- py.test --cov -v --tb=native
+- ansible-playbook -i provisioner/hosts provisioner/site.yml --syntax-check
+
+notifications:
+  email:
+    on_success: change  # [always|never|change]
+    on_failure: always  # [always|never|change]
+deploy:
+  provider: heroku
+  buildpack: python
+  strategy: api
+  api_key:
+    # travis encrypt $(heroku auth:token) --add deploy.api_key
+    secure: <add_heroku_auth_token_here>
+  app:
+    master: doctest-dev
+    qa: doctest-qa
+    prod: doctest-prod
+  on:
+    repo: Fueled/doctest-web
